@@ -2,6 +2,7 @@ function Hero({
   query,
   onQueryChange,
   onSearch,
+  onClear,
   categories,
   activeCategory,
   onCategorySelect,
@@ -11,10 +12,12 @@ function Hero({
     <section className="hero-section">
       <div className="hero-copy">
         <p className="eyebrow">Discover new meals</p>
+
         <h1>Find recipes to inspire your next meal.</h1>
+
         <p className="hero-text">
-          Search TheMealDB for fresh recipes, explore trending categories, and tap a
-          card to view full cooking directions.
+          Search TheMealDB for fresh recipes, explore trending categories,
+          and tap a card to view full cooking directions.
         </p>
       </div>
 
@@ -22,27 +25,41 @@ function Hero({
         <label htmlFor="search-input" className="visually-hidden">
           Search meals
         </label>
+
         <input
           id="search-input"
           type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search by meal or ingredient"
+          placeholder="Search by meal name"
           aria-label="Search meals"
           disabled={loading}
         />
+
         <button type="submit" disabled={loading}>
           {loading ? 'Searching…' : 'Search'}
         </button>
+
+        {query && (
+          <button
+            type="button"
+            className="clear-button"
+            onClick={onClear}
+            disabled={loading}
+          >
+            Clear
+          </button>
+        )}
       </form>
 
-      <div className="category-chips" role="list">
+      <div className="category-chips" aria-label="Recipe categories">
         {categories.map((category) => (
           <button
             key={category}
             type="button"
             className={`chip ${activeCategory === category ? 'active' : ''}`}
             onClick={() => onCategorySelect(category)}
+            disabled={loading}
           >
             {category}
           </button>
@@ -52,4 +69,4 @@ function Hero({
   )
 }
 
-export default Hero;
+export default Hero

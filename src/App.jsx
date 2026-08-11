@@ -5,7 +5,15 @@ import RecipeDetails from './components/RecipeDetails.jsx'
 import './App.css'
 
 const MEALDB_BASE = 'https://www.themealdb.com/api/json/v1/1'
-const CATEGORIES = ['Featured', 'Chicken', 'Beef', 'Seafood', 'Vegetarian', 'Dessert']
+
+const CATEGORIES = [
+  'Featured',
+  'Chicken',
+  'Beef',
+  'Seafood',
+  'Vegetarian',
+  'Dessert',
+]
 
 function App() {
   const [query, setQuery] = useState('')
@@ -20,16 +28,24 @@ function App() {
   }, [])
 
   const normalizeMeals = (data) => {
-    if (!data || !data.meals) return []
-    return Array.isArray(data.meals) ? data.meals : []
+    if (!data || !Array.isArray(data.meals)) {
+      return []
+    }
+
+    return data.meals
   }
 
   const fetchMealDetail = async (idMeal) => {
     if (!idMeal) return null
-    const response = await fetch(`${MEALDB_BASE}/lookup.php?i=${encodeURIComponent(idMeal)}`)
+
+    const response = await fetch(
+      `${MEALDB_BASE}/lookup.php?i=${encodeURIComponent(idMeal)}`
+    )
+
     if (!response.ok) {
       throw new Error('Unable to load meal details.')
     }
+
     const data = await response.json()
     return normalizeMeals(data)[0] ?? null
   }
@@ -39,15 +55,19 @@ function App() {
     setError('')
     setSelectedMeal(null)
     setActiveCategory('Featured')
+    setQuery('')
 
     try {
-      const response = await fetch(`${MEALDB_BASE}/randomselection.php`)
+      const response = await fetch(`${MEALDB_BASE}/search.php?s=chicken`)
+
       if (!response.ok) {
         throw new Error('Unable to load featured meals.')
       }
+
       const data = await response.json()
-      const results = normalizeMeals(data)
-      setMeals(results.slice(0, 8))
+      const results = normalizeMeals(data).slice(0, 8)
+
+      setMeals(results)
     } catch (fetchError) {
       setError(fetchError.message || 'Failed to load featured meals.')
       setMeals([])
@@ -69,14 +89,22 @@ function App() {
     setQuery('')
 
     try {
-      const response = await fetch(`${MEALDB_BASE}/filter.php?c=${encodeURIComponent(category)}`)
+      const response = await fetch(
+        `${MEALDB_BASE}/filter.php?c=${encodeURIComponent(category)}`
+      )
+
       if (!response.ok) {
         throw new Error('Unable to load category meals.')
       }
+
       const data = await response.json()
       const previewMeals = normalizeMeals(data).slice(0, 8)
-      const fullMeals = await Promise.all(previewMeals.map((meal) => fetchMealDetail(meal.idMeal)))
-      setMeals(fullMeals.filter(Boolean))
+
+      const detailedMeals = await Promise.all(
+        previewMeals.map((meal) => fetchMealDetail(meal.idMeal))
+      )
+
+      setMeals(detailedMeals.filter(Boolean))
     } catch (fetchError) {
       setError(fetchError.message || 'Failed to load meals.')
       setMeals([])
@@ -87,10 +115,13 @@ function App() {
 
   const handleSearch = async (event) => {
     event.preventDefault()
+
     const trimmedQuery = query.trim()
 
     if (!trimmedQuery) {
       setError('Please enter a meal name to search.')
+      setMeals([])
+      setSelectedMeal(null)
       return
     }
 
@@ -100,18 +131,24 @@ function App() {
     setActiveCategory('Search')
 
     try {
-      const response = await fetch(`${MEALDB_BASE}/search.php?s=${encodeURIComponent(trimmedQuery)}`)
+      const response = await fetch(
+        `${MEALDB_BASE}/search.php?s=${encodeURIComponent(trimmedQuery)}`
+      )
+
       if (!response.ok) {
         throw new Error('Search service is unavailable.')
       }
+
       const data = await response.json()
       const results = normalizeMeals(data)
+
       if (results.length === 0) {
         setError(`No recipes found for "${trimmedQuery}".`)
         setMeals([])
-      } else {
-        setMeals(results)
+        return
       }
+
+      setMeals(results)
     } catch (fetchError) {
       setError(fetchError.message || 'Something went wrong while searching.')
       setMeals([])
@@ -121,7 +158,9 @@ function App() {
   }
 
   const handleRecipeSelect = async (meal) => {
-    if (meal?.strInstructions) {
+    if (!meal) return
+
+    if (meal.strInstructions) {
       setSelectedMeal(meal)
       return
     }
@@ -131,9 +170,12 @@ function App() {
 
     try {
       const mealDetail = await fetchMealDetail(meal.idMeal)
-      if (mealDetail) {
-        setSelectedMeal(mealDetail)
+
+      if (!mealDetail) {
+        throw new Error('Recipe details were not found.')
       }
+
+      setSelectedMeal(mealDetail)
     } catch (fetchError) {
       setError(fetchError.message || 'Unable to load recipe details.')
     } finally {
@@ -141,11 +183,19 @@ function App() {
     }
   }
 
-  const heading = activeCategory === 'Featured'
-    ? 'Today’s best picks'
-    : activeCategory === 'Search'
-      ? `Search results for "${query}"`
-      : `${activeCategory} recipes`
+  const handleClearSearch = () => {
+    setQuery('')
+    setError('')
+    setSelectedMeal(null)
+    loadFeaturedMeals()
+  }
+
+  const heading =
+    activeCategory === 'Featured'
+      ? 'Today’s best picks'
+      : activeCategory === 'Search'
+        ? `Search results for "${query.trim()}"`
+        : `${activeCategory} recipes`
 
   return (
     <div className="app-container">
@@ -153,6 +203,7 @@ function App() {
         query={query}
         onQueryChange={setQuery}
         onSearch={handleSearch}
+        onClear={handleClearSearch}
         categories={CATEGORIES}
         activeCategory={activeCategory}
         onCategorySelect={loadMealsByCategory}
@@ -163,26 +214,47 @@ function App() {
         <section className="list-panel">
           <div className="panel-heading">
             <div>
-              <p className="panel-tag">{activeCategory === 'Featured' ? 'Featured meals' : activeCategory === 'Search' ? 'Search' : activeCategory}</p>
+              <p className="panel-tag">
+                {activeCategory === 'Featured'
+                  ? 'Featured meals'
+                  : activeCategory === 'Search'
+                    ? 'Search results'
+                    : activeCategory}
+              </p>
+
               <h2>{heading}</h2>
             </div>
+
             <p className="panel-count">
-              {loading ? 'Loading…' : `${meals.length} recipe${meals.length === 1 ? '' : 's'}`}
+              {loading
+                ? 'Loading…'
+                : `${meals.length} recipe${meals.length === 1 ? '' : 's'}`}
             </p>
           </div>
 
-          {error && <div className="status-strip error">{error}</div>}
-
-          {!error && !loading && meals.length === 0 && (
-            <div className="empty-state-card">
-              <p>{activeCategory === 'Featured'
-                ? 'No featured meals available right now. Try another category or search above.'
-                : 'No results found. Try a different search term or category.'
-              }</p>
+          {error && (
+            <div className="status-strip error" role="alert">
+              {error}
             </div>
           )}
 
-          {!error && meals.length > 0 && (
+          {loading && (
+            <div className="status-strip">
+              Loading recipes…
+            </div>
+          )}
+
+          {!error && !loading && meals.length === 0 && (
+            <div className="empty-state-card">
+              <p>
+                {activeCategory === 'Featured'
+                  ? 'No featured meals are available right now. Try another category or search above.'
+                  : 'No results found. Try a different search term or category.'}
+              </p>
+            </div>
+          )}
+
+          {!error && !loading && meals.length > 0 && (
             <div className="recipe-grid">
               {meals.map((meal) => (
                 <RecipeCard
