@@ -1,16 +1,48 @@
-# React + Vite
+# Recipe Finder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive React application that uses TheMealDB API to search and explore recipes.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Search meals by name
+- Featured meals on initial load
+- Category filters
+- Recipe details
+- Ingredients and cooking instructions
+- Loading, error, and empty states
+- Responsive design
 
-## React Compiler
+## How AI Assisted
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+AI was used as a development assistant throughout the project. It helped with:
 
-## Expanding the ESLint configuration
+- Planning the application structure
+- Creating the initial React UI
+- Integrating TheMealDB API
+- Adding search and category filtering
+- Building reusable components
+- Improving responsive styling
+- Reviewing the implementation for errors and accessibility issues
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+I reviewed the generated code before accepting or modifying it.
+
+## Manual Improvements and Corrections
+
+After reviewing the AI-generated implementation, I made several manual improvements:
+
+- Corrected the featured meals fetching logic after the API response caused an error.
+- Updated the search field to accurately describe meal-name search instead of ingredient search.
+- Improved the full-width page layout by removing restrictive starter Vite styles.
+- Fixed invalid CSS selectors and duplicated media queries.
+- Improved the desktop layout so recipe cards and recipe details are better aligned.
+- Added clearer empty-search validation and reset behavior.
+- Improved spacing, responsive behavior, and recipe-detail readability.
+
+## Tech Stack
+
+- React
+- Vite
+- JavaScript
+- CSS
+- TheMealDB API
+- GitHub Copilot / AI coding assistant
